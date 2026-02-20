@@ -2,116 +2,233 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mast Cell & Anxiety Tracker</title>
+<title>Daily Health Tracker</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 16px; max-width: 720px; margin: auto; }
-  h1 { text-align: center; margin-bottom: 6px; }
-  .sub { text-align: center; color: #555; margin-top: 0; margin-bottom: 18px; font-size: 14px; }
-  .section { background: #f7f9fc; padding: 14px; margin-bottom: 16px; border-radius: 14px; }
-  label { display: block; font-weight: 600; margin-top: 10px; margin-bottom: 6px; }
+  :root { --card:#f7f9fc; --ink:#0f172a; --muted:#475569; --ok:#16a34a; --go:#2563eb; --bad:#ef4444; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 14px; max-width: 820px; margin: auto; color: var(--ink); }
+  h1 { text-align:center; margin: 10px 0 2px; }
+  .sub { text-align:center; color: var(--muted); margin: 0 0 14px; font-size: 13px; }
+  .tabs { display:flex; gap:8px; position: sticky; top: 0; padding: 10px 0; background: white; z-index: 3; }
+  .tab { flex:1; padding:10px; border-radius: 12px; border: 1px solid #cbd5e1; background:#fff; font-weight:700; }
+  .tab.active { background: #eaf2ff; border-color:#94a3b8; }
+  .section { background: var(--card); padding: 14px; margin-bottom: 14px; border-radius: 16px; border: 1px solid #e2e8f0; }
+  label { display:block; font-weight: 700; margin-top: 10px; margin-bottom: 6px; }
   input, textarea, select {
-    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box;
+    width:100%; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 16px; box-sizing: border-box;
   }
-  textarea { min-height: 90px; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
-  button {
-    width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; margin-top: 10px; font-weight: 700;
-  }
-  .save { background: #16a34a; color: white; }
-  .download { background: #2563eb; color: white; }
-  .clear { background: #ef4444; color: white; }
-  .hint { color: #666; font-size: 13px; margin-top: 6px; }
-  .small { font-size: 12px; color: #666; }
+  textarea { min-height: 88px; }
+  .row { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  button { width: 100%; padding: 14px; border-radius: 14px; border: none; font-size: 16px; margin-top: 10px; font-weight: 800; }
+  .save { background: var(--ok); color: white; }
+  .go { background: var(--go); color: white; }
+  .bad { background: var(--bad); color: white; }
+  .mini { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .chiprow { display:flex; gap:8px; flex-wrap: wrap; margin-top: 10px;}
+  .chip { padding: 8px 10px; border-radius: 999px; background: #ffffff; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; }
+  .kpi { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 720px) { .kpi { grid-template-columns: 1fr; } }
+  .k { background:#fff; border:1px solid #cbd5e1; border-radius: 16px; padding: 12px;}
+  .k .t { color: var(--muted); font-size: 12px; font-weight: 700; }
+  .k .v { font-size: 24px; font-weight: 900; margin-top: 2px; }
+  .k .s { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .hr { height:1px; background:#e2e8f0; margin: 12px 0; }
+  .hidden { display:none !important; }
+
+  /* Lock screen */
+  .lockwrap { position: fixed; inset: 0; background: rgba(255,255,255,0.96); z-index: 9999; display:flex; align-items:center; justify-content:center; padding: 18px;}
+  .lockcard { width: 100%; max-width: 420px; background:#fff; border:1px solid #cbd5e1; border-radius: 18px; padding: 16px; }
+  .locktitle { font-size: 20px; font-weight: 900; margin: 0 0 6px; }
+  .locksub { color: var(--muted); margin: 0 0 12px; font-size: 13px; }
+  .smallbtn { padding: 12px; border-radius: 14px; border:1px solid #cbd5e1; background:#fff; font-weight:800; width:100%; margin-top: 8px; }
 </style>
 </head>
 <body>
 
-<h1>Daily Health Tracker</h1>
-<p class="sub">Anxiety + Mast Cell Symptoms (1–10)</p>
-
-<div class="section">
-  <label>Date</label>
-  <input type="date" id="date">
-
-  <label>Anxiety (1–10)</label>
-  <input type="number" min="1" max="10" id="anxiety" inputmode="numeric" placeholder="1 to 10">
-
-  <label>What happened today? (events / possible triggers)</label>
-  <textarea id="notes" placeholder="Stress, food, environment, sleep, exercise, social stuff, etc."></textarea>
-
-  <h3>Symptoms BEFORE medication</h3>
-  <div class="row">
-    <div>
-      <label>Flushing (1–10)</label>
-      <input type="number" min="1" max="10" id="flushing" inputmode="numeric">
-    </div>
-    <div>
-      <label>Itching (1–10)</label>
-      <input type="number" min="1" max="10" id="itching" inputmode="numeric">
-    </div>
-    <div>
-      <label>GI symptoms (1–10)</label>
-      <input type="number" min="1" max="10" id="gi" inputmode="numeric">
-    </div>
-    <div>
-      <label>Fatigue (1–10)</label>
-      <input type="number" min="1" max="10" id="fatigue" inputmode="numeric">
-    </div>
-    <div>
-      <label>Brain fog (1–10)</label>
-      <input type="number" min="1" max="10" id="brainfog" inputmode="numeric">
-    </div>
+<div id="lock" class="lockwrap hidden">
+  <div class="lockcard">
+    <p class="locktitle">Enter Passcode</p>
+    <p class="locksub">This is a simple privacy lock for this device.</p>
+    <label>Passcode</label>
+    <input id="pinInput" type="password" inputmode="numeric" placeholder="4+ digits">
+    <button class="go" onclick="unlock()">Unlock</button>
+    <button class="smallbtn" onclick="lockHelp()">Forgot passcode?</button>
+    <p class="mini" id="lockMsg"></p>
   </div>
+</div>
 
-  <h3>Medication</h3>
-  <label>Took antihistamine?</label>
-  <select id="medication" onchange="toggleAfter()">
-    <option value="No">No</option>
-    <option value="Yes">Yes</option>
-  </select>
-  <div class="hint">If “Yes”, the “After medication” section will appear.</div>
+<h1>Daily Health Tracker</h1>
+<p class="sub">Anxiety + Mast Cell Symptoms • 1–10 • Exportable for PCP</p>
 
-  <div id="afterBox" style="display:none; margin-top:14px;">
-    <h3>Symptoms AFTER medication</h3>
+<div class="tabs">
+  <button class="tab active" id="tabEntry" onclick="showTab('entry')">New Entry</button>
+  <button class="tab" id="tabDash" onclick="showTab('dash')">Dashboard</button>
+  <button class="tab" id="tabExport" onclick="showTab('export')">Export/Backup</button>
+  <button class="tab" id="tabSettings" onclick="showTab('settings')">Settings</button>
+</div>
+
+<!-- ENTRY TAB -->
+<div id="pageEntry">
+  <div class="section">
+    <label>Date</label>
+    <input type="date" id="date">
+
+    <label>Anxiety (1–10)</label>
+    <input type="number" min="1" max="10" id="anxiety" inputmode="numeric" placeholder="1 = low, 10 = extreme">
+
+    <label>What happened today? (events / possible triggers)</label>
+    <textarea id="notes" placeholder="Stress, food, environment, sleep, exercise, social stuff, etc."></textarea>
+
     <div class="row">
       <div>
-        <label>Flushing after (0–10)</label>
-        <input type="number" min="0" max="10" id="flushingAfter" inputmode="numeric">
+        <label>Sleep quality (1–10)</label>
+        <input type="number" min="1" max="10" id="sleep" inputmode="numeric" placeholder="Optional">
       </div>
       <div>
-        <label>Itching after (0–10)</label>
-        <input type="number" min="0" max="10" id="itchingAfter" inputmode="numeric">
-      </div>
-      <div>
-        <label>GI after (0–10)</label>
-        <input type="number" min="0" max="10" id="giAfter" inputmode="numeric">
-      </div>
-      <div>
-        <label>Fatigue after (0–10)</label>
-        <input type="number" min="0" max="10" id="fatigueAfter" inputmode="numeric">
-      </div>
-      <div>
-        <label>Brain fog after (0–10)</label>
-        <input type="number" min="0" max="10" id="brainfogAfter" inputmode="numeric">
+        <label>Stress load (1–10)</label>
+        <input type="number" min="1" max="10" id="stress" inputmode="numeric" placeholder="Optional">
       </div>
     </div>
 
-    <label>How long did it take to help? (optional)</label>
-    <input type="text" id="medTime" placeholder="Example: 30 minutes">
+    <h3>Symptoms BEFORE medication</h3>
+    <div class="row">
+      <div><label>Flushing (1–10)</label><input type="number" min="1" max="10" id="flushing" inputmode="numeric"></div>
+      <div><label>Itching (1–10)</label><input type="number" min="1" max="10" id="itching" inputmode="numeric"></div>
+      <div><label>GI symptoms (1–10)</label><input type="number" min="1" max="10" id="gi" inputmode="numeric"></div>
+      <div><label>Fatigue (1–10)</label><input type="number" min="1" max="10" id="fatigue" inputmode="numeric"></div>
+      <div><label>Brain fog (1–10)</label><input type="number" min="1" max="10" id="brainfog" inputmode="numeric"></div>
+    </div>
 
-    <label>Notes after medication (optional)</label>
-    <textarea id="medNotes" placeholder="What changed? Any side effects?"></textarea>
+    <h3>Medication</h3>
+    <label>Took antihistamine?</label>
+    <select id="medication" onchange="toggleAfter()">
+      <option value="No">No</option>
+      <option value="Yes">Yes</option>
+    </select>
+    <div class="mini">If “Yes”, the “After medication” section appears.</div>
+
+    <div id="afterBox" class="section hidden" style="background:#fff; margin-top:12px;">
+      <h3 style="margin-top:0;">Symptoms AFTER medication</h3>
+      <div class="row">
+        <div><label>Flushing after (0–10)</label><input type="number" min="0" max="10" id="flushingAfter" inputmode="numeric"></div>
+        <div><label>Itching after (0–10)</label><input type="number" min="0" max="10" id="itchingAfter" inputmode="numeric"></div>
+        <div><label>GI after (0–10)</label><input type="number" min="0" max="10" id="giAfter" inputmode="numeric"></div>
+        <div><label>Fatigue after (0–10)</label><input type="number" min="0" max="10" id="fatigueAfter" inputmode="numeric"></div>
+        <div><label>Brain fog after (0–10)</label><input type="number" min="0" max="10" id="brainfogAfter" inputmode="numeric"></div>
+      </div>
+
+      <label>How long did it take to help? (optional)</label>
+      <input type="text" id="medTime" placeholder="Example: 30 minutes">
+
+      <label>Notes after medication (optional)</label>
+      <textarea id="medNotes" placeholder="What changed? Any side effects?"></textarea>
+
+      <div class="chiprow" id="improveChips"></div>
+      <p class="mini" id="improveSummary"></p>
+    </div>
+
+    <button class="save" onclick="saveEntry()">Save Entry</button>
+    <p class="mini">Privacy note: by default, entries are stored only on this device/browser (no server, no account).</p>
   </div>
+</div>
 
-  <button class="save" onclick="saveEntry()">Save Entry</button>
-  <button class="download" onclick="downloadCSV()">Download Data (CSV)</button>
-  <button class="clear" onclick="clearAll()">Clear All Data (on this phone)</button>
-  <p class="small">Privacy note: entries are stored locally on this device/browser only (no account, no server).</p>
+<!-- DASHBOARD TAB -->
+<div id="pageDash" class="hidden">
+  <div class="section">
+    <div class="kpi">
+      <div class="k">
+        <div class="t">Last 7 days • Avg Anxiety</div>
+        <div class="v" id="kpiAnx">—</div>
+        <div class="s" id="kpiAnxS">—</div>
+      </div>
+      <div class="k">
+        <div class="t">Last 7 days • Avg Symptoms (Before)</div>
+        <div class="v" id="kpiSym">—</div>
+        <div class="s" id="kpiSymS">—</div>
+      </div>
+      <div class="k">
+        <div class="t">Medication Response • Avg Reduction</div>
+        <div class="v" id="kpiMed">—</div>
+        <div class="s" id="kpiMedS">—</div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <h3 style="margin:0 0 8px;">Trends (last 14 days)</h3>
+    <div class="section" style="background:#fff;">
+      <div class="mini">Anxiety</div>
+      <svg id="chartAnx" width="100%" height="120" viewBox="0 0 700 120" preserveAspectRatio="none"></svg>
+      <div class="mini" style="margin-top:10px;">Avg Symptoms (Before)</div>
+      <svg id="chartSym" width="100%" height="120" viewBox="0 0 700 120" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="hr"></div>
+
+    <h3 style="margin:0 0 8px;">Pattern hints</h3>
+    <div id="hints" class="mini">—</div>
+  </div>
+</div>
+
+<!-- EXPORT TAB -->
+<div id="pageExport" class="hidden">
+  <div class="section">
+    <h3 style="margin-top:0;">Export for PCP / Backup</h3>
+
+    <button class="go" onclick="downloadCSV()">Download CSV</button>
+    <button class="go" onclick="downloadJSON()">Download Backup (JSON)</button>
+
+    <button class="go" onclick="shareCSV()">Share CSV (iPhone Share Sheet)</button>
+    <p class="mini">Tip: iPhone Share is the closest thing to “email export” with an attachment from a web app.</p>
+
+    <div class="hr"></div>
+
+    <h3 style="margin:0 0 8px;">Restore from Backup (JSON)</h3>
+    <input type="file" id="jsonFile" accept=".json" />
+    <button class="go" onclick="importJSON()">Import JSON Backup</button>
+
+    <div class="hr"></div>
+
+    <button class="bad" onclick="clearAll()">Clear All Data (this device)</button>
+    <p class="mini">Clearing data erases entries from this device only.</p>
+  </div>
+</div>
+
+<!-- SETTINGS TAB -->
+<div id="pageSettings" class="hidden">
+  <div class="section">
+    <h3 style="margin-top:0;">Privacy & Passcode</h3>
+
+    <label>Enable passcode lock</label>
+    <select id="pinEnabled" onchange="savePinSettings()">
+      <option value="No">No</option>
+      <option value="Yes">Yes</option>
+    </select>
+
+    <div id="pinBox" class="hidden">
+      <label>Set / Change passcode (4+ digits)</label>
+      <input id="pinSet" type="password" inputmode="numeric" placeholder="Enter new passcode">
+      <button class="go" onclick="setPin()">Save Passcode</button>
+      <p class="mini">This is a basic lock. It helps privacy on the phone, but it is not “medical-grade encryption.”</p>
+    </div>
+
+    <div class="hr"></div>
+
+    <h3 style="margin:0 0 8px;">Quick Notes</h3>
+    <p class="mini">
+      • Best practice: use Safari + “Add to Home Screen” for an app-like experience.<br>
+      • Back up weekly with JSON (recommended).<br>
+      • CSV is what you’ll hand to the PCP.
+    </p>
+  </div>
 </div>
 
 <script>
   const $ = (id) => document.getElementById(id);
+  const SYM = ["flushing","itching","gi","fatigue","brainfog"];
+  const SYM_LABEL = {
+    flushing:"Flushing", itching:"Itching", gi:"GI", fatigue:"Fatigue", brainfog:"Brain fog"
+  };
 
   function todayISO() {
     const d = new Date();
@@ -120,65 +237,123 @@
     return local.toISOString().slice(0, 10);
   }
 
-  $("date").value = todayISO();
-
-  function toggleAfter() {
-    const show = $("medication").value === "Yes";
-    $("afterBox").style.display = show ? "block" : "none";
-    if (!show) {
-      ["flushingAfter","itchingAfter","giAfter","fatigueAfter","brainfogAfter","medTime","medNotes"].forEach(id => $(id).value = "");
-    }
+  function showTab(which) {
+    const pages = ["entry","dash","export","settings"];
+    pages.forEach(p => {
+      $("page" + cap(p)).classList.toggle("hidden", p !== which);
+      $("tab" + cap(p)).classList.toggle("active", p === which);
+    });
+    if (which === "dash") renderDashboard();
+    if (which === "settings") loadPinSettingsToUI();
   }
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
   function getEntries() {
     return JSON.parse(localStorage.getItem("mastCellEntries") || "[]");
   }
-
   function setEntries(entries) {
     localStorage.setItem("mastCellEntries", JSON.stringify(entries));
   }
 
-  function require1to10(val, fieldName) {
-    if (val === "") return true; // allow blanks (some days they may skip)
-    const n = Number(val);
-    if (!Number.isFinite(n) || n < 1 || n > 10) {
-      alert(`${fieldName} must be between 1 and 10 (or left blank).`);
+  function numOrNull(v) {
+    if (v === "" || v == null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+  function requireRange(v, a, b, name) {
+    if (v === "") return true;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < a || n > b) {
+      alert(`${name} must be between ${a} and ${b} (or left blank).`);
       return false;
     }
     return true;
   }
 
-  function require0to10(val, fieldName) {
-    if (val === "") return true;
-    const n = Number(val);
-    if (!Number.isFinite(n) || n < 0 || n > 10) {
-      alert(`${fieldName} must be between 0 and 10 (or left blank).`);
-      return false;
-    }
-    return true;
+  function avg(arr) {
+    const xs = arr.filter(x => typeof x === "number" && Number.isFinite(x));
+    if (!xs.length) return null;
+    return xs.reduce((a,b)=>a+b,0) / xs.length;
   }
+
+  function avgSymptomsBefore(e) {
+    return avg(SYM.map(k => numOrNull(e[k])));
+  }
+
+  function calcImprovement(before, after) {
+    // Improvement % = (before - after) / before * 100
+    const b = numOrNull(before);
+    const a = numOrNull(after);
+    if (b == null || a == null || b <= 0) return null;
+    return ((b - a) / b) * 100;
+  }
+
+  function toggleAfter() {
+    const show = $("medication").value === "Yes";
+    $("afterBox").classList.toggle("hidden", !show);
+    if (!show) {
+      ["flushingAfter","itchingAfter","giAfter","fatigueAfter","brainfogAfter","medTime","medNotes"].forEach(id => $(id).value = "");
+      $("improveChips").innerHTML = "";
+      $("improveSummary").textContent = "";
+    } else {
+      updateImprovementPreview();
+    }
+  }
+
+  function updateImprovementPreview() {
+    const chips = [];
+    const improvements = [];
+    SYM.forEach(k => {
+      const pct = calcImprovement($(k).value, $(k+"After").value);
+      if (pct == null) return;
+      const nice = Math.round(pct);
+      improvements.push(nice);
+      chips.push(`<span class="chip">${SYM_LABEL[k]}: ${nice}%</span>`);
+    });
+    $("improveChips").innerHTML = chips.join("");
+    const overall = avg(improvements);
+    $("improveSummary").textContent =
+      (overall == null)
+      ? "Fill in AFTER ratings to see reduction %."
+      : `Estimated overall symptom reduction: ${Math.round(overall)}%`;
+  }
+
+  // Update preview when after fields change
+  ["flushing","itching","gi","fatigue","brainfog","flushingAfter","itchingAfter","giAfter","fatigueAfter","brainfogAfter"].forEach(id => {
+    document.addEventListener("input", (ev) => {
+      if (ev.target && ev.target.id === id && $("medication").value === "Yes") updateImprovementPreview();
+    }, true);
+  });
 
   function saveEntry() {
-    // light validation
-    if (!require1to10($("anxiety").value, "Anxiety")) return;
-    if (!require1to10($("flushing").value, "Flushing (before)")) return;
-    if (!require1to10($("itching").value, "Itching (before)")) return;
-    if (!require1to10($("gi").value, "GI (before)")) return;
-    if (!require1to10($("fatigue").value, "Fatigue (before)")) return;
-    if (!require1to10($("brainfog").value, "Brain fog (before)")) return;
+    // light validation (allow blanks, but validate ranges if present)
+    if (!requireRange($("anxiety").value, 1, 10, "Anxiety")) return;
+    if (!requireRange($("sleep").value, 1, 10, "Sleep quality")) return;
+    if (!requireRange($("stress").value, 1, 10, "Stress load")) return;
+
+    if (!requireRange($("flushing").value, 1, 10, "Flushing (before)")) return;
+    if (!requireRange($("itching").value, 1, 10, "Itching (before)")) return;
+    if (!requireRange($("gi").value, 1, 10, "GI (before)")) return;
+    if (!requireRange($("fatigue").value, 1, 10, "Fatigue (before)")) return;
+    if (!requireRange($("brainfog").value, 1, 10, "Brain fog (before)")) return;
 
     if ($("medication").value === "Yes") {
-      if (!require0to10($("flushingAfter").value, "Flushing (after)")) return;
-      if (!require0to10($("itchingAfter").value, "Itching (after)")) return;
-      if (!require0to10($("giAfter").value, "GI (after)")) return;
-      if (!require0to10($("fatigueAfter").value, "Fatigue (after)")) return;
-      if (!require0to10($("brainfogAfter").value, "Brain fog (after)")) return;
+      if (!requireRange($("flushingAfter").value, 0, 10, "Flushing (after)")) return;
+      if (!requireRange($("itchingAfter").value, 0, 10, "Itching (after)")) return;
+      if (!requireRange($("giAfter").value, 0, 10, "GI (after)")) return;
+      if (!requireRange($("fatigueAfter").value, 0, 10, "Fatigue (after)")) return;
+      if (!requireRange($("brainfogAfter").value, 0, 10, "Brain fog (after)")) return;
     }
 
     const entry = {
-      date: $("date").value,
+      date: $("date").value || todayISO(),
       anxiety: $("anxiety").value,
-      notes: $("notes").value.replaceAll("\n"," ").trim(),
+      notes: ($("notes").value || "").replaceAll("\n"," ").trim(),
+      sleep: $("sleep").value,
+      stress: $("stress").value,
       flushing: $("flushing").value,
       itching: $("itching").value,
       gi: $("gi").value,
@@ -190,8 +365,8 @@
       giAfter: $("giAfter").value,
       fatigueAfter: $("fatigueAfter").value,
       brainfogAfter: $("brainfogAfter").value,
-      medTime: $("medTime").value.replaceAll("\n"," ").trim(),
-      medNotes: $("medNotes").value.replaceAll("\n"," ").trim()
+      medTime: ($("medTime").value || "").trim(),
+      medNotes: ($("medNotes").value || "").replaceAll("\n"," ").trim()
     };
 
     const entries = getEntries();
@@ -200,39 +375,30 @@
 
     alert("Saved! ✅");
 
-    // reset form for next use (keep date as today)
-    ["anxiety","notes","flushing","itching","gi","fatigue","brainfog"].forEach(id => $(id).value = "");
+    // reset for next use
+    ["anxiety","notes","sleep","stress","flushing","itching","gi","fatigue","brainfog"].forEach(id => $(id).value = "");
     $("medication").value = "No";
     toggleAfter();
   }
 
-  function downloadCSV() {
-    const entries = getEntries();
-    if (entries.length === 0) {
-      alert("No entries saved yet.");
-      return;
-    }
+  function escapeCSV(v) {
+    const s = (v ?? "").toString();
+    if (s.includes('"') || s.includes(",") || s.includes("\n")) return `"${s.replaceAll('"','""')}"`;
+    return s;
+  }
 
+  function buildCSV(entries) {
     const headers = [
-      "Date","Anxiety","Notes",
+      "Date","Anxiety","Sleep","Stress","Notes",
       "FlushingBefore","ItchingBefore","GIBefore","FatigueBefore","BrainFogBefore",
       "AntihistamineTaken",
       "FlushingAfter","ItchingAfter","GIAfter","FatigueAfter","BrainFogAfter",
       "MedTime","MedNotes"
     ];
-
-    const escapeCSV = (v) => {
-      const s = (v ?? "").toString();
-      if (s.includes('"') || s.includes(",") || s.includes("\n")) {
-        return `"${s.replaceAll('"','""')}"`;
-      }
-      return s;
-    };
-
     let csv = headers.join(",") + "\n";
     entries.forEach(e => {
       const row = [
-        e.date, e.anxiety, e.notes,
+        e.date, e.anxiety, e.sleep, e.stress, e.notes,
         e.flushing, e.itching, e.gi, e.fatigue, e.brainfog,
         e.medication,
         e.flushingAfter, e.itchingAfter, e.giAfter, e.fatigueAfter, e.brainfogAfter,
@@ -240,12 +406,63 @@
       ].map(escapeCSV).join(",");
       csv += row + "\n";
     });
+    return csv;
+  }
 
-    const blob = new Blob([csv], { type: "text/csv" });
+  function downloadCSV() {
+    const entries = getEntries();
+    if (!entries.length) return alert("No entries saved yet.");
+    const blob = new Blob([buildCSV(entries)], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "mast_cell_tracker_data.csv";
     link.click();
+  }
+
+  function downloadJSON() {
+    const entries = getEntries();
+    const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), entries }, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "mast_cell_tracker_backup.json";
+    link.click();
+  }
+
+  async function shareCSV() {
+    const entries = getEntries();
+    if (!entries.length) return alert("No entries saved yet.");
+    const csv = buildCSV(entries);
+    const file = new File([csv], "mast_cell_tracker_data.csv", { type: "text/csv" });
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ title: "Mast Cell Tracker Data", text: "CSV export", files: [file] });
+      } catch (e) {
+        // user canceled share; ignore
+      }
+    } else {
+      alert("Sharing isn’t supported on this browser/device. Use Download CSV instead.");
+    }
+  }
+
+  function importJSON() {
+    const f = $("jsonFile").files[0];
+    if (!f) return alert("Choose a .json backup file first.");
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const incoming = Array.isArray(data.entries) ? data.entries : (Array.isArray(data) ? data : null);
+        if (!incoming) return alert("That file doesn’t look like a valid backup.");
+        const existing = getEntries();
+        const merged = existing.concat(incoming);
+        setEntries(merged);
+        alert(`Imported! Total entries now: ${merged.length}`);
+      } catch {
+        alert("Could not read that file (invalid JSON).");
+      }
+    };
+    reader.readAsText(f);
   }
 
   function clearAll() {
@@ -254,6 +471,232 @@
       alert("All data cleared.");
     }
   }
+
+  function lastNDays(entries, n) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - (n-1));
+    cutoff.setHours(0,0,0,0);
+    return entries
+      .map(e => ({...e, _d: new Date(e.date)}))
+      .filter(e => Number.isFinite(e._d.getTime()) && e._d >= cutoff)
+      .sort((a,b)=>a._d - b._d);
+  }
+
+  function renderLineChart(svgId, points, minY=0, maxY=10) {
+    const svg = $(svgId);
+    svg.innerHTML = "";
+    const W = 700, H = 120;
+    const padX = 16, padY = 16;
+    const w = W - padX*2, h = H - padY*2;
+
+    // axes baseline
+    const base = document.createElementNS("http://www.w3.org/2000/svg","line");
+    base.setAttribute("x1", padX);
+    base.setAttribute("y1", H-padY);
+    base.setAttribute("x2", W-padX);
+    base.setAttribute("y2", H-padY);
+    base.setAttribute("stroke", "#cbd5e1");
+    base.setAttribute("stroke-width", "2");
+    svg.appendChild(base);
+
+    if (!points.length) {
+      const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", padX);
+      t.setAttribute("y", 60);
+      t.setAttribute("fill", "#64748b");
+      t.setAttribute("font-size", "14");
+      t.textContent = "No data yet.";
+      svg.appendChild(t);
+      return;
+    }
+
+    const xs = points.map((p,i)=> i);
+    const ys = points.map(p=> p.y);
+
+    const xScale = (i) => padX + (points.length===1 ? w/2 : (i/(points.length-1))*w);
+    const yScale = (y) => {
+      const yy = clamp(y, minY, maxY);
+      const t = (yy - minY) / (maxY - minY || 1);
+      return (H - padY) - t*h;
+    };
+
+    // path
+    let d = "";
+    points.forEach((p,i)=>{
+      const x = xScale(i), y = yScale(p.y);
+      d += (i===0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    });
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", d);
+    path.setAttribute("fill","none");
+    path.setAttribute("stroke","#2563eb");
+    path.setAttribute("stroke-width","3");
+    svg.appendChild(path);
+
+    // dots
+    points.forEach((p,i)=>{
+      const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      c.setAttribute("cx", xScale(i));
+      c.setAttribute("cy", yScale(p.y));
+      c.setAttribute("r", "4");
+      c.setAttribute("fill", "#16a34a");
+      svg.appendChild(c);
+    });
+  }
+
+  function renderDashboard() {
+    const entries = getEntries().map(e => ({...e, _d:new Date(e.date)})).filter(e => Number.isFinite(e._d.getTime()));
+    if (!entries.length) {
+      $("kpiAnx").textContent = "—";
+      $("kpiSym").textContent = "—";
+      $("kpiMed").textContent = "—";
+      $("hints").textContent = "No entries yet. Save a few days to see trends.";
+      renderLineChart("chartAnx", []);
+      renderLineChart("chartSym", []);
+      return;
+    }
+
+    const last7 = lastNDays(entries, 7);
+    const avgAnx7 = avg(last7.map(e => numOrNull(e.anxiety)));
+    const avgSym7 = avg(last7.map(e => avgSymptomsBefore(e)));
+
+    // medication response (avg % reduction across all after-med symptom pairs where med=Yes)
+    const medRows = entries.filter(e => e.medication === "Yes");
+    const medPcts = [];
+    medRows.forEach(e => {
+      SYM.forEach(k => {
+        const pct = calcImprovement(e[k], e[k+"After"]);
+        if (pct != null) medPcts.push(pct);
+      });
+    });
+    const avgMed = avg(medPcts);
+
+    $("kpiAnx").textContent = avgAnx7 == null ? "—" : avgAnx7.toFixed(1);
+    $("kpiAnxS").textContent = `Based on ${last7.length} day(s) in last 7.`;
+    $("kpiSym").textContent = avgSym7 == null ? "—" : avgSym7.toFixed(1);
+    $("kpiSymS").textContent = "Average of symptom ratings (before).";
+    $("kpiMed").textContent = avgMed == null ? "—" : `${Math.round(avgMed)}%`;
+    $("kpiMedS").textContent = medRows.length ? `Based on ${medRows.length} med day(s).` : "No medication days yet.";
+
+    const last14 = lastNDays(entries, 14);
+    const anxPts = last14
+      .map(e => ({ x:e.date, y:numOrNull(e.anxiety) }))
+      .filter(p => p.y != null);
+    const symPts = last14
+      .map(e => ({ x:e.date, y:avgSymptomsBefore(e) }))
+      .filter(p => p.y != null);
+
+    renderLineChart("chartAnx", anxPts, 0, 10);
+    renderLineChart("chartSym", symPts, 0, 10);
+
+    // Pattern hints (simple + helpful)
+    const hints = [];
+
+    // sleep vs symptoms/anxiety (very basic compare: low sleep days vs others)
+    const withSleep = entries.filter(e => numOrNull(e.sleep) != null);
+    if (withSleep.length >= 5) {
+      const low = withSleep.filter(e => numOrNull(e.sleep) <= 4);
+      const high = withSleep.filter(e => numOrNull(e.sleep) >= 7);
+      const lowAnx = avg(low.map(e => numOrNull(e.anxiety)));
+      const highAnx = avg(high.map(e => numOrNull(e.anxiety)));
+      const lowSym = avg(low.map(e => avgSymptomsBefore(e)));
+      const highSym = avg(high.map(e => avgSymptomsBefore(e)));
+      if (low.length >= 2 && high.length >= 2) {
+        if (lowAnx != null && highAnx != null && (lowAnx - highAnx) >= 1) {
+          hints.push(`On low-sleep days (≤4), anxiety averages about ${(lowAnx-highAnx).toFixed(1)} point(s) higher than high-sleep days (≥7).`);
+        }
+        if (lowSym != null && highSym != null && (lowSym - highSym) >= 1) {
+          hints.push(`On low-sleep days (≤4), symptoms average about ${(lowSym-highSym).toFixed(1)} point(s) higher than high-sleep days (≥7).`);
+        }
+      }
+    }
+
+    // stress vs anxiety
+    const withStress = entries.filter(e => numOrNull(e.stress) != null && numOrNull(e.anxiety) != null);
+    if (withStress.length >= 5) {
+      const hi = withStress.filter(e => numOrNull(e.stress) >= 7);
+      const lo = withStress.filter(e => numOrNull(e.stress) <= 3);
+      const hiA = avg(hi.map(e=>numOrNull(e.anxiety)));
+      const loA = avg(lo.map(e=>numOrNull(e.anxiety)));
+      if (hi.length >= 2 && lo.length >= 2 && hiA != null && loA != null && (hiA - loA) >= 1) {
+        hints.push(`On high-stress days (≥7), anxiety averages about ${(hiA-loA).toFixed(1)} point(s) higher than low-stress days (≤3).`);
+      }
+    }
+
+    // medication response hint
+    if (avgMed != null) {
+      if (avgMed >= 30) hints.push(`Antihistamine days show an average symptom reduction around ${Math.round(avgMed)}% (suggests measurable response).`);
+      else hints.push(`Antihistamine days show a smaller average reduction around ${Math.round(avgMed)}% (still worth tracking timing + dose + context).`);
+    }
+
+    $("hints").innerHTML = hints.length ? ("• " + hints.join("<br>• ")) : "Add more entries (and sleep/stress ratings) to generate pattern hints.";
+  }
+
+  // PASSCODE (basic lock)
+  function hashPin(pin){
+    // simple hash (not cryptographic) — good enough for “keep honest people honest”
+    let h = 0;
+    for (let i=0; i<pin.length; i++) h = (h*31 + pin.charCodeAt(i)) >>> 0;
+    return String(h);
+  }
+  function loadPinSettingsToUI() {
+    const enabled = localStorage.getItem("pinEnabled") || "No";
+    $("pinEnabled").value = enabled;
+    $("pinBox").classList.toggle("hidden", enabled !== "Yes");
+  }
+  function savePinSettings() {
+    const v = $("pinEnabled").value;
+    localStorage.setItem("pinEnabled", v);
+    $("pinBox").classList.toggle("hidden", v !== "Yes");
+    if (v !== "Yes") {
+      sessionStorage.removeItem("unlocked");
+      $("lock").classList.add("hidden");
+    } else {
+      // prompt lock immediately
+      sessionStorage.removeItem("unlocked");
+      maybeLock();
+    }
+  }
+  function setPin() {
+    const pin = $("pinSet").value.trim();
+    if (pin.length < 4) return alert("Passcode must be at least 4 digits.");
+    localStorage.setItem("pinHash", hashPin(pin));
+    alert("Passcode saved.");
+    $("pinSet").value = "";
+    sessionStorage.setItem("unlocked","1");
+    $("lock").classList.add("hidden");
+  }
+  function maybeLock() {
+    const enabled = localStorage.getItem("pinEnabled") || "No";
+    const pinHash = localStorage.getItem("pinHash");
+    const unlocked = sessionStorage.getItem("unlocked") === "1";
+    if (enabled === "Yes" && pinHash && !unlocked) {
+      $("lock").classList.remove("hidden");
+      $("lockMsg").textContent = "";
+      $("pinInput").value = "";
+      $("pinInput").focus();
+    }
+  }
+  function unlock() {
+    const pin = $("pinInput").value.trim();
+    const pinHash = localStorage.getItem("pinHash");
+    if (!pinHash) { $("lockMsg").textContent = "No passcode set yet. Go to Settings and set one."; return; }
+    if (hashPin(pin) === pinHash) {
+      sessionStorage.setItem("unlocked","1");
+      $("lock").classList.add("hidden");
+      $("lockMsg").textContent = "";
+    } else {
+      $("lockMsg").textContent = "Incorrect passcode.";
+    }
+  }
+  function lockHelp() {
+    alert("If passcode is forgotten, the only way to remove it is to clear this website’s data in iPhone Settings > Safari > Advanced > Website Data, then search the site and delete it. (This also deletes saved entries unless you backed up.)");
+  }
+
+  // INIT
+  $("date").value = todayISO();
+  loadPinSettingsToUI();
+  maybeLock();
 </script>
 
 </body>
