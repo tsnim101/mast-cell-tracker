@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mast Cell & Anxiety Tracker</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 16px; max-width: 720px; margin: auto; }
+  h1 { text-align: center; margin-bottom: 6px; }
+  .sub { text-align: center; color: #555; margin-top: 0; margin-bottom: 18px; font-size: 14px; }
+  .section { background: #f7f9fc; padding: 14px; margin-bottom: 16px; border-radius: 14px; }
+  label { display: block; font-weight: 600; margin-top: 10px; margin-bottom: 6px; }
+  input, textarea, select {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box;
+  }
+  textarea { min-height: 90px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+  button {
+    width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; margin-top: 10px; font-weight: 700;
+  }
+  .save { background: #16a34a; color: white; }
+  .download { background: #2563eb; color: white; }
+  .clear { background: #ef4444; color: white; }
+  .hint { color: #666; font-size: 13px; margin-top: 6px; }
+  .small { font-size: 12px; color: #666; }
+</style>
+</head>
+<body>
+
+<h1>Daily Health Tracker</h1>
+<p class="sub">Anxiety + Mast Cell Symptoms (1–10)</p>
+
+<div class="section">
+  <label>Date</label>
+  <input type="date" id="date">
+
+  <label>Anxiety (1–10)</label>
+  <input type="number" min="1" max="10" id="anxiety" inputmode="numeric" placeholder="1 to 10">
+
+  <label>What happened today? (events / possible triggers)</label>
+  <textarea id="notes" placeholder="Stress, food, environment, sleep, exercise, social stuff, etc."></textarea>
+
+  <h3>Symptoms BEFORE medication</h3>
+  <div class="row">
+    <div>
+      <label>Flushing (1–10)</label>
+      <input type="number" min="1" max="10" id="flushing" inputmode="numeric">
+    </div>
+    <div>
+      <label>Itching (1–10)</label>
+      <input type="number" min="1" max="10" id="itching" inputmode="numeric">
+    </div>
+    <div>
+      <label>GI symptoms (1–10)</label>
+      <input type="number" min="1" max="10" id="gi" inputmode="numeric">
+    </div>
+    <div>
+      <label>Fatigue (1–10)</label>
+      <input type="number" min="1" max="10" id="fatigue" inputmode="numeric">
+    </div>
+    <div>
+      <label>Brain fog (1–10)</label>
+      <input type="number" min="1" max="10" id="brainfog" inputmode="numeric">
+    </div>
+  </div>
+
+  <h3>Medication</h3>
+  <label>Took antihistamine?</label>
+  <select id="medication" onchange="toggleAfter()">
+    <option value="No">No</option>
+    <option value="Yes">Yes</option>
+  </select>
+  <div class="hint">If “Yes”, the “After medication” section will appear.</div>
+
+  <div id="afterBox" style="display:none; margin-top:14px;">
+    <h3>Symptoms AFTER medication</h3>
+    <div class="row">
+      <div>
+        <label>Flushing after (0–10)</label>
+        <input type="number" min="0" max="10" id="flushingAfter" inputmode="numeric">
+      </div>
+      <div>
+        <label>Itching after (0–10)</label>
+        <input type="number" min="0" max="10" id="itchingAfter" inputmode="numeric">
+      </div>
+      <div>
+        <label>GI after (0–10)</label>
+        <input type="number" min="0" max="10" id="giAfter" inputmode="numeric">
+      </div>
+      <div>
+        <label>Fatigue after (0–10)</label>
+        <input type="number" min="0" max="10" id="fatigueAfter" inputmode="numeric">
+      </div>
+      <div>
+        <label>Brain fog after (0–10)</label>
+        <input type="number" min="0" max="10" id="brainfogAfter" inputmode="numeric">
+      </div>
+    </div>
+
+    <label>How long did it take to help? (optional)</label>
+    <input type="text" id="medTime" placeholder="Example: 30 minutes">
+
+    <label>Notes after medication (optional)</label>
+    <textarea id="medNotes" placeholder="What changed? Any side effects?"></textarea>
+  </div>
+
+  <button class="save" onclick="saveEntry()">Save Entry</button>
+  <button class="download" onclick="downloadCSV()">Download Data (CSV)</button>
+  <button class="clear" onclick="clearAll()">Clear All Data (on this phone)</button>
+  <p class="small">Privacy note: entries are stored locally on this device/browser only (no account, no server).</p>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function todayISO() {
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - off * 60 * 1000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  $("date").value = todayISO();
+
+  function toggleAfter() {
+    const show = $("medication").value === "Yes";
+    $("afterBox").style.display = show ? "block" : "none";
+    if (!show) {
+      ["flushingAfter","itchingAfter","giAfter","fatigueAfter","brainfogAfter","medTime","medNotes"].forEach(id => $(id).value = "");
+    }
+  }
+
+  function getEntries() {
+    return JSON.parse(localStorage.getItem("mastCellEntries") || "[]");
+  }
+
+  function setEntries(entries) {
+    localStorage.setItem("mastCellEntries", JSON.stringify(entries));
+  }
+
+  function require1to10(val, fieldName) {
+    if (val === "") return true; // allow blanks (some days they may skip)
+    const n = Number(val);
+    if (!Number.isFinite(n) || n < 1 || n > 10) {
+      alert(`${fieldName} must be between 1 and 10 (or left blank).`);
+      return false;
+    }
+    return true;
+  }
+
+  function require0to10(val, fieldName) {
+    if (val === "") return true;
+    const n = Number(val);
+    if (!Number.isFinite(n) || n < 0 || n > 10) {
+      alert(`${fieldName} must be between 0 and 10 (or left blank).`);
+      return false;
+    }
+    return true;
+  }
+
+  function saveEntry() {
+    // light validation
+    if (!require1to10($("anxiety").value, "Anxiety")) return;
+    if (!require1to10($("flushing").value, "Flushing (before)")) return;
+    if (!require1to10($("itching").value, "Itching (before)")) return;
+    if (!require1to10($("gi").value, "GI (before)")) return;
+    if (!require1to10($("fatigue").value, "Fatigue (before)")) return;
+    if (!require1to10($("brainfog").value, "Brain fog (before)")) return;
+
+    if ($("medication").value === "Yes") {
+      if (!require0to10($("flushingAfter").value, "Flushing (after)")) return;
+      if (!require0to10($("itchingAfter").value, "Itching (after)")) return;
+      if (!require0to10($("giAfter").value, "GI (after)")) return;
+      if (!require0to10($("fatigueAfter").value, "Fatigue (after)")) return;
+      if (!require0to10($("brainfogAfter").value, "Brain fog (after)")) return;
+    }
+
+    const entry = {
+      date: $("date").value,
+      anxiety: $("anxiety").value,
+      notes: $("notes").value.replaceAll("\n"," ").trim(),
+      flushing: $("flushing").value,
+      itching: $("itching").value,
+      gi: $("gi").value,
+      fatigue: $("fatigue").value,
+      brainfog: $("brainfog").value,
+      medication: $("medication").value,
+      flushingAfter: $("flushingAfter").value,
+      itchingAfter: $("itchingAfter").value,
+      giAfter: $("giAfter").value,
+      fatigueAfter: $("fatigueAfter").value,
+      brainfogAfter: $("brainfogAfter").value,
+      medTime: $("medTime").value.replaceAll("\n"," ").trim(),
+      medNotes: $("medNotes").value.replaceAll("\n"," ").trim()
+    };
+
+    const entries = getEntries();
+    entries.push(entry);
+    setEntries(entries);
+
+    alert("Saved! ✅");
+
+    // reset form for next use (keep date as today)
+    ["anxiety","notes","flushing","itching","gi","fatigue","brainfog"].forEach(id => $(id).value = "");
+    $("medication").value = "No";
+    toggleAfter();
+  }
+
+  function downloadCSV() {
+    const entries = getEntries();
+    if (entries.length === 0) {
+      alert("No entries saved yet.");
+      return;
+    }
+
+    const headers = [
+      "Date","Anxiety","Notes",
+      "FlushingBefore","ItchingBefore","GIBefore","FatigueBefore","BrainFogBefore",
+      "AntihistamineTaken",
+      "FlushingAfter","ItchingAfter","GIAfter","FatigueAfter","BrainFogAfter",
+      "MedTime","MedNotes"
+    ];
+
+    const escapeCSV = (v) => {
+      const s = (v ?? "").toString();
+      if (s.includes('"') || s.includes(",") || s.includes("\n")) {
+        return `"${s.replaceAll('"','""')}"`;
+      }
+      return s;
+    };
+
+    let csv = headers.join(",") + "\n";
+    entries.forEach(e => {
+      const row = [
+        e.date, e.anxiety, e.notes,
+        e.flushing, e.itching, e.gi, e.fatigue, e.brainfog,
+        e.medication,
+        e.flushingAfter, e.itchingAfter, e.giAfter, e.fatigueAfter, e.brainfogAfter,
+        e.medTime, e.medNotes
+      ].map(escapeCSV).join(",");
+      csv += row + "\n";
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "mast_cell_tracker_data.csv";
+    link.click();
+  }
+
+  function clearAll() {
+    if (confirm("This will erase ALL saved entries on this device. Continue?")) {
+      localStorage.removeItem("mastCellEntries");
+      alert("All data cleared.");
+    }
+  }
+</script>
+
+</body>
+</html>
